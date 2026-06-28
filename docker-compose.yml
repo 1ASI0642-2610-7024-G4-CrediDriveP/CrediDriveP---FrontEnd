@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  credidrivep_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: credidrivep_flutter
+    ports:
+      - "5000:5000"
+    volumes:
+      # Hot reload: monta el código fuente en vivo
+      - .:/app
+      # Cache de pub para no re-descargar paquetes
+      - flutter_pub_cache:/root/.pub-cache
+    environment:
+      - FLUTTER_WEB_PORT=5000
+    stdin_open: true
+    tty: true
+
+volumes:
+  flutter_pub_cache:

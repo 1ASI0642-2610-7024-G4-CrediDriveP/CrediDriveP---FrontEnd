@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../../../core/navigation/app_router.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/usecases/login_usecase.dart';
 
@@ -20,7 +21,14 @@ class LoginCubit extends Cubit<LoginState> {
 
     result.fold(
       (failure) => emit(LoginFailure(failure.message)),
-      (user) => emit(LoginSuccess(user)),
+      (user) {
+        // Redirige según rol
+        final destination = user.isAdmin
+            ? AppRoutes.adminHome
+            : AppRoutes.home;
+
+        emit(LoginSuccess(user, destination));
+      },
     );
   }
 

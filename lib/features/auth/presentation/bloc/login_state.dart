@@ -16,9 +16,10 @@ class LoginLoading extends LoginState {
 
 class LoginSuccess extends LoginState {
   final AuthUser user;
-  const LoginSuccess(this.user);
+  final String redirectTo; // ← destino según rol
+  const LoginSuccess(this.user, this.redirectTo);
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, redirectTo];
 }
 
 class LoginFailure extends LoginState {

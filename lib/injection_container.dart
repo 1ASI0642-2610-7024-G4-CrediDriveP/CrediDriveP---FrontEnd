@@ -1,14 +1,15 @@
-import 'package:credidrivep/features/home/data/datasources/home_remote_datasource.dart';
-import 'package:credidrivep/features/home/data/repositories/home_repository_impl.dart';
-import 'package:credidrivep/features/home/domain/repositories/home_repository.dart';
-import 'package:credidrivep/features/home/domain/usecases/get_dashboard_summary_usecase.dart';
-import 'package:credidrivep/features/home/presentation/bloc/home_cubit.dart';
+import 'package:credidrivep/features/officer/home/data/datasources/home_remote_datasource.dart';
+import 'package:credidrivep/features/officer/home/data/repositories/home_repository_impl.dart';
+import 'package:credidrivep/features/officer/home/domain/repositories/home_repository.dart';
+import 'package:credidrivep/features/officer/home/domain/usecases/get_dashboard_summary_usecase.dart';
+import 'package:credidrivep/features/officer/home/presentation/bloc/home_cubit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'core/api/dio_client.dart';
 
 // Auth
+import 'features/admin/loan_plans/presentation/bloc/loan_plans_cubit.dart';
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -16,28 +17,28 @@ import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/presentation/bloc/login_cubit.dart';
 import 'features/auth/presentation/bloc/register_cubit.dart';
 
-import 'features/solicitudes/data/datasources/solicitudes_remote_datasource.dart';
-import 'features/solicitudes/data/repositories/solicitudes_repository_impl.dart';
-import 'features/solicitudes/domain/repositories/solicitudes_repository.dart';
-import 'features/solicitudes/domain/usecases/client_usecases.dart';
-import 'features/solicitudes/domain/usecases/vehicle_usecases.dart';
-import 'features/solicitudes/presentation/bloc/clients_cubit.dart';
-import 'features/solicitudes/presentation/bloc/vehicles_cubit.dart';
-import 'features/simular/data/datasources/simular_remote_datasource.dart';
-import 'features/simular/data/repositories/simular_repository_impl.dart';
-import 'features/simular/domain/repositories/simular_repository.dart';
-import 'features/simular/domain/usecases/simulation_usecases.dart';
-import 'features/simular/presentation/bloc/simular_cubit.dart';
-import 'features/creditos/data/datasources/creditos_remote_datasource.dart';
-import 'features/creditos/data/repositories/creditos_repository_impl.dart';
-import 'features/creditos/domain/repositories/creditos_repository.dart';
-import 'features/creditos/domain/usecases/loan_usecases.dart';
-import 'features/creditos/presentation/bloc/creditos_cubit.dart';
-import 'features/configuracion/data/datasources/configuracion_remote_datasource.dart';
-import 'features/configuracion/data/repositories/configuracion_repository_impl.dart';
-import 'features/configuracion/domain/repositories/configuracion_repository.dart';
-import 'features/configuracion/domain/usecases/configuracion_usecases.dart';
-import 'features/configuracion/presentation/bloc/configuracion_cubit.dart';
+import 'features/officer/solicitudes/data/datasources/solicitudes_remote_datasource.dart';
+import 'features/officer/solicitudes/data/repositories/solicitudes_repository_impl.dart';
+import 'features/officer/solicitudes/domain/repositories/solicitudes_repository.dart';
+import 'features/officer/solicitudes/domain/usecases/client_usecases.dart';
+import 'features/officer/solicitudes/domain/usecases/vehicle_usecases.dart';
+import 'features/officer/solicitudes/presentation/bloc/clients_cubit.dart';
+import 'features/officer/solicitudes/presentation/bloc/vehicles_cubit.dart';
+import 'features/officer/simular/data/datasources/simular_remote_datasource.dart';
+import 'features/officer/simular/data/repositories/simular_repository_impl.dart';
+import 'features/officer/simular/domain/repositories/simular_repository.dart';
+import 'features/officer/simular/domain/usecases/simulation_usecases.dart';
+import 'features/officer/simular/presentation/bloc/simular_cubit.dart';
+import 'features/officer/creditos/data/datasources/creditos_remote_datasource.dart';
+import 'features/officer/creditos/data/repositories/creditos_repository_impl.dart';
+import 'features/officer/creditos/domain/repositories/creditos_repository.dart';
+import 'features/officer/creditos/domain/usecases/loan_usecases.dart';
+import 'features/officer/creditos/presentation/bloc/creditos_cubit.dart';
+import 'features/officer/configuracion/data/datasources/configuracion_remote_datasource.dart';
+import 'features/officer/configuracion/data/repositories/configuracion_repository_impl.dart';
+import 'features/officer/configuracion/domain/repositories/configuracion_repository.dart';
+import 'features/officer/configuracion/domain/usecases/configuracion_usecases.dart';
+import 'features/officer/configuracion/presentation/bloc/configuracion_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -157,5 +158,6 @@ Future<void> initDependencies() async {
         getProfile: sl(),
         logout: sl(),
       ));
+  sl.registerFactory(() => LoanPlansCubit(sl()));
   
 }

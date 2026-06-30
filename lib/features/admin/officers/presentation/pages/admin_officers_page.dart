@@ -192,7 +192,7 @@ class _OfficersView extends StatelessWidget {
         onPressed: () => _showForm(context),
         child: const Icon(Icons.add_rounded, color: Colors.white),
       ),
-      bottomNavigationBar: const AdminNavbar(currentIndex: 4),
+      bottomNavigationBar: const AdminNavbar(currentIndex: 5),
     );
   }
 

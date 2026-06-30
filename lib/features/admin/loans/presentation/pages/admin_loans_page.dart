@@ -7,6 +7,9 @@ import '../../../../../injection_container.dart';
 import '../../../../officer/creditos/domain/entities/loan.dart';
 import '../../../../officer/creditos/presentation/bloc/creditos_cubit.dart';
 
+// Importa aquí tu LoanDetailCubit si está en otra ruta, por ejemplo:
+// import '../../presentation/bloc/loan_detail_cubit.dart'; 
+
 class AdminLoansPage extends StatelessWidget {
   const AdminLoansPage({super.key});
 
@@ -35,13 +38,6 @@ class _AdminLoansViewState extends State<_AdminLoansView> {
     'REJECTED',
     'ACTIVE',
   ];
-
-  static const _filterLabels = {
-    'PENDING_APPROVAL': 'PENDING_APPROVAL',
-    'APPROVED': 'APPROVED',
-    'REJECTED': 'REJECTED',
-    'ACTIVE': 'ACTIVE',
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -330,15 +326,12 @@ class _LoanApprovalCard extends StatelessWidget {
             ),
           ),
 
-          // Botones de acción según status
+          // Botones de acción según status (Ya sin los BlocProviders anidados)
           if (loan.status == 'PENDING_APPROVAL') ...[
             const Divider(height: 1, color: AppColors.border),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: BlocProvider(
-                create: (_) => sl<LoanDetailCubit>(),
-                child: _PendingActions(loan: loan, onRefresh: onRefresh),
-              ),
+              child: _PendingActions(loan: loan, onRefresh: onRefresh),
             ),
           ],
 
@@ -346,10 +339,7 @@ class _LoanApprovalCard extends StatelessWidget {
             const Divider(height: 1, color: AppColors.border),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: BlocProvider(
-                create: (_) => sl<LoanDetailCubit>(),
-                child: _ApprovedAction(loan: loan, onRefresh: onRefresh),
-              ),
+              child: _ApprovedAction(loan: loan, onRefresh: onRefresh),
             ),
           ],
         ],
@@ -358,68 +348,51 @@ class _LoanApprovalCard extends StatelessWidget {
   }
 }
 
-class _PendingActions extends StatelessWidget {
+// ── _PendingActions como StatefulWidget para manejo de carga local ───────────
+class _PendingActions extends StatefulWidget {
   final LoanSummary loan;
   final VoidCallback onRefresh;
 
   const _PendingActions({required this.loan, required this.onRefresh});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocListener<LoanDetailCubit, LoanDetailState>(
-      listener: (context, state) {
-        if (state is LoanStatusUpdated) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.message),
+  State<_PendingActions> createState() => _PendingActionsState();
+}
+
+class _PendingActionsState extends State<_PendingActions> {
+  bool _loading = false;
+
+  Future<void> _approve() async {
+    setState(() => _loading = true);
+    try {
+      final cubit = sl<LoanDetailCubit>();
+      await cubit.approve(widget.loan.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Préstamo aprobado correctamente.'),
             backgroundColor: AppColors.success,
-          ));
-          onRefresh();
-        }
-      },
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 44,
-              child: ElevatedButton(
-                onPressed: () => _reject(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text('Rechazar',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w700)),
-              ),
-            ),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SizedBox(
-              height: 44,
-              child: ElevatedButton(
-                onPressed: () =>
-                    context.read<LoanDetailCubit>().approve(loan.id),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text('Aprobar',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w700)),
-              ),
-            ),
+        );
+        widget.onRefresh();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
           ),
-        ],
-      ),
-    );
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
-  void _reject(BuildContext context) {
+  Future<void> _reject() async {
     final ctrl = TextEditingController();
-    showDialog(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Rechazar préstamo'),
@@ -430,63 +403,172 @@ class _PendingActions extends StatelessWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancelar')),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context
-                  .read<LoanDetailCubit>()
-                  .reject(loan.id, reason: ctrl.text);
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Rechazar',
                 style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    setState(() => _loading = true);
+    try {
+      final cubit = sl<LoanDetailCubit>();
+      await cubit.reject(widget.loan.id, reason: ctrl.text);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Préstamo rechazado.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        widget.onRefresh();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+                color: AppColors.primary, strokeWidth: 2.5),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 44,
+            child: ElevatedButton(
+              onPressed: _reject,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('Rechazar',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: SizedBox(
+            height: 44,
+            child: ElevatedButton(
+              onPressed: _approve,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('Aprobar',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
-class _ApprovedAction extends StatelessWidget {
+// ── _ApprovedAction como StatefulWidget para manejo de carga local ───────────
+class _ApprovedAction extends StatefulWidget {
   final LoanSummary loan;
   final VoidCallback onRefresh;
 
   const _ApprovedAction({required this.loan, required this.onRefresh});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocListener<LoanDetailCubit, LoanDetailState>(
-      listener: (context, state) {
-        if (state is LoanStatusUpdated) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.message),
+  State<_ApprovedAction> createState() => _ApprovedActionState();
+}
+
+class _ApprovedActionState extends State<_ApprovedAction> {
+  bool _loading = false;
+
+  Future<void> _activate() async {
+    setState(() => _loading = true);
+    try {
+      final cubit = sl<LoanDetailCubit>();
+      await cubit.activate(widget.loan.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Crédito activado correctamente.'),
             backgroundColor: AppColors.success,
-          ));
-          onRefresh();
-        }
-      },
-      child: SizedBox(
-        width: double.infinity,
-        height: 44,
-        child: ElevatedButton(
-          onPressed: () => context.read<LoanDetailCubit>().activate(loan.id),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.bolt_rounded, color: Colors.white, size: 18),
-              SizedBox(width: 6),
-              Text('Activar Crédito',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700)),
-            ],
-          ),
+        );
+        widget.onRefresh();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: ElevatedButton(
+        onPressed: _loading ? null : _activate,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
         ),
+        child: _loading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2.5),
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bolt_rounded, color: Colors.white, size: 18),
+                  SizedBox(width: 6),
+                  Text('Activar Crédito',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700)),
+                ],
+              ),
       ),
     );
   }

@@ -22,6 +22,14 @@ class CrediDrivePApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,
+      builder: (context, child) {
+        if (child == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return child;
+      },
     );
   }
 }

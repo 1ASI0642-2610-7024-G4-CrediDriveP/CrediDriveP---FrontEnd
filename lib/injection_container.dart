@@ -9,6 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'core/api/dio_client.dart';
 
 // Auth
+import 'features/admin/loan_plans/presentation/bloc/loan_plans_cubit.dart';
 import 'features/auth/data/datasources/auth_remote_datasource.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -157,5 +158,6 @@ Future<void> initDependencies() async {
         getProfile: sl(),
         logout: sl(),
       ));
+  sl.registerFactory(() => LoanPlansCubit(sl()));
   
 }

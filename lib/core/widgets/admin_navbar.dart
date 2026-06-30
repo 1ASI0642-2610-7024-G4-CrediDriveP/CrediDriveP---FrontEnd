@@ -49,6 +49,7 @@ class AdminNavbar extends StatelessWidget {
                 isActive: currentIndex == 2,
                 onTap: () => context.go(AppRoutes.adminInsurances),
               ),
+              
               _NavItem(
                 icon: Icons.payments_outlined,
                 iconActive: Icons.payments_rounded,
@@ -57,10 +58,17 @@ class AdminNavbar extends StatelessWidget {
                 onTap: () => context.go(AppRoutes.adminCommissions),
               ),
               _NavItem(
+                icon: Icons.credit_card_outlined,
+                iconActive: Icons.credit_card_rounded,
+                label: 'Planes',
+                isActive: currentIndex == 4,
+                onTap: () => context.go(AppRoutes.adminLoanPlans),
+              ),
+              _NavItem(
                 icon: Icons.badge_outlined,
                 iconActive: Icons.badge_rounded,
                 label: 'Officers',
-                isActive: currentIndex == 4,
+                isActive: currentIndex == 5,
                 onTap: () => context.go(AppRoutes.adminOfficers),
               ),
             ],

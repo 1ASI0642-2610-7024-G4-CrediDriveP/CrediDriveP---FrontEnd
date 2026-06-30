@@ -16,6 +16,7 @@ import '../../features/admin/loans/presentation/pages/admin_loans_page.dart';
 import '../../features/admin/insurances/presentation/pages/admin_insurances_page.dart';
 import '../../features/admin/commissions/presentation/pages/admin_commissions_page.dart';
 import '../../features/admin/officers/presentation/pages/admin_officers_page.dart';
+import '../../features/admin/loan_plans/presentation/pages/admin_loan_plans_page.dart';
 
 import '../constants/app_constants.dart';
 
@@ -39,6 +40,8 @@ abstract class AppRoutes {
   static const adminInsurances = '/admin/insurances';
   static const adminCommissions = '/admin/commissions';
   static const adminOfficers = '/admin/officers';
+  static const adminLoanPlans = '/admin/loan-plans';
+
 }
 
 class AppRouter {
@@ -46,14 +49,23 @@ class AppRouter {
     return GoRouter(
       initialLocation: AppRoutes.login,
       redirect: (context, state) async {
-        final token = await storage.read(key: kTokenKey);
-        final role = await storage.read(key: kRoleKey);
+        String? token;
+        String? role;
+
+        try {
+          token = await storage.read(key: kTokenKey);
+          role = await storage.read(key: kRoleKey);
+        } catch (_) {
+          token = null;
+          role = null;
+        }
+
         final loc = state.matchedLocation;
         final isAuth = loc == AppRoutes.login || loc == AppRoutes.register;
 
         // Si no está autenticado y no está en login/register, forzar login
         if (token == null && !isAuth) return AppRoutes.login;
-        
+
         // Si ya está autenticado e intenta ir a login/register, redirigir según su rol
         if (token != null && isAuth) {
           return role == 'ADMIN' ? AppRoutes.adminHome : AppRoutes.home;
@@ -138,6 +150,10 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.adminOfficers,
           builder: (_, __) => const AdminOfficersPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.adminLoanPlans,
+          builder: (_, __) => const AdminLoanPlansPage(),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
